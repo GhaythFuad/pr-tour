@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PR Tour",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Walks you through a GitHub pull request in the order set by a CodeTour posted as a PR comment or loaded from a file.",
   "permissions": [
     "scripting",

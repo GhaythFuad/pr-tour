@@ -19,6 +19,9 @@ separate download; do not upload it as the browser extension. Development source
 ## Chrome Web Store
 
 The initial submission was accepted for review on October 27, 2026, with automatic publication after approval.
+Version 0.1.1 replaced that submission on October 27, 2026. It is pending review with automatic publication after
+approval; the store description and reviewer instructions explain manual loading without a PAT and comment loading
+with a PAT. The uploaded Chrome ZIP's SHA-256 is `9e736a559c41b7a91d25a3a0a6d47474c252080196994582681e2d1bf4416084`.
 The store item ID is `dnfljchfhbdkoefakmnfakoloipkfdji`. Update this same item for future versions.
 
 The [developer dashboard](https://chrome.google.com/webstore/devconsole) requires a registered publisher account.
