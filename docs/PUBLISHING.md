@@ -18,6 +18,9 @@ separate download; do not upload it as the browser extension. Development source
 
 ## Chrome Web Store
 
+The initial submission was accepted for review on October 27, 2026, with automatic publication after approval.
+The store item ID is `dnfljchfhbdkoefakmnfakoloipkfdji`. Update this same item for future versions.
+
 The [developer dashboard](https://chrome.google.com/webstore/devconsole) requires a registered publisher account.
 Upload `release/pr-tour-<version>-chrome.zip` as a new item, or a new package on the existing PR Tour item.
 Use [STORE-LISTING.md](STORE-LISTING.md) for listing text, permission explanations, and reviewer instructions.

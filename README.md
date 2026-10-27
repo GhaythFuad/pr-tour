@@ -47,6 +47,8 @@ or until you scroll.
 
 ## Install
 
+The Chrome Web Store submission is under review. Until approval, use the release download below.
+
 Download `pr-tour-<version>-chrome.zip` from the [latest release](https://github.com/GhaythFuad/pr-tour/releases/latest),
 extract it, then open `chrome://extensions` in Chrome 120 or later. Turn on **Developer mode**, choose
 **Load unpacked**, and select the extracted folder that contains `manifest.json`.
