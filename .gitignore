@@ -1,0 +1,9 @@
+node_modules/
+dist/
+bin/
+release/
+.DS_Store
+.env
+.env.*
+*.pem
+*.crx

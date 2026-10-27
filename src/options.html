@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PR Tour options</title>
+    <style>
+      :root { color-scheme: light dark; font: 14px/1.5 system-ui, sans-serif; }
+      body { max-width: 560px; margin: 40px auto; padding: 0 16px; }
+      label { display: block; font-weight: 600; margin-bottom: 4px; }
+      input { width: 100%; box-sizing: border-box; padding: 6px 8px; font: 13px ui-monospace, monospace; }
+      .actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+      #status { color: GrayText; }
+    </style>
+  </head>
+  <body>
+    <h1>PR Tour</h1>
+    <p>
+      PR Tour reads a pull request's comments and changed files through the GitHub API. Public repositories work
+      without a token. For private ones,
+      <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">create a
+      fine-grained token</a> with access to those repositories and the <strong>Pull requests: Read-only</strong>
+      permission, then paste it here. It is stored only in this browser profile.
+    </p>
+    <form id="form">
+      <label for="token">GitHub token</label>
+      <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" />
+      <div class="actions">
+        <button type="submit">Save</button>
+        <span id="status" role="status"></span>
+      </div>
+    </form>
+    <p><a href="https://github.com/GhaythFuad/pr-tour/blob/main/PRIVACY.md" target="_blank" rel="noreferrer">Privacy policy</a></p>
+    <script src="options.js"></script>
+  </body>
+</html>
