@@ -40,6 +40,9 @@ or until you scroll.
   **Finish** on the last step, removes the tour for this pull request in this tab; the extension's toolbar button
   reopens it, showing a "Loading…" pill at once. On a pull request without a tour comment the button opens the load
   panel below; on a page that isn't a pull request it says so instead.
+- **No tour yet:** click the toolbar button to choose **Without a PAT** (paste or upload a tour) or **With a PAT**
+  (read tour comments from the PR). Each path includes the skill install command and a prompt for that PR: the
+  manual prompt saves a `.tour` file; the comment prompt asks the agent to post it. Use **Check for tour** after posting.
 - **Load** (bottom left, the page icon) swaps the card for a panel where you paste a tour comment or a bare `.tour`
   file, or choose the file. The loaded tour starts at step 1 and replaces the tour comment for this pull request in
   every tab, reloads included; the page icon turns the accent colour while it plays. **Use the tour comment** in the
@@ -66,9 +69,16 @@ Load the generated `dist/` folder as an unpacked extension. After rebuilding, cl
 in `chrome://extensions` and reload the pull request. Keep the extension installed when updating it to retain the
 token in its options.
 
-Public repositories work without a token. For private ones, open the extension's options (right-click its icon ›
-**Options**) and paste a [fine-grained token](https://github.com/settings/personal-access-tokens/new) that can access
-those repositories with **Pull requests: Read-only**.
+Choose one of two ways to use the extension:
+
+- **Without a PAT — load manually.** Ask your agent to save a `.tour` file, then paste it or choose the file in
+  PR Tour. This works on public and private PRs you can open in GitHub. The extension makes no GitHub API requests
+  in this mode. It follows saved line numbers and shows plain-text notes; commit checks, anchor relocation, and
+  reading Viewed status are unavailable. Load a fresh tour after new commits.
+- **With a PAT — read PR comments.** Open the extension's options (right-click its icon › **Options**) and save a
+  [fine-grained PAT](https://github.com/settings/personal-access-tokens/new) with access to the target repositories
+  and **Pull requests: Read-only**. Reload the PR. PR Tour reads the posted tour comment and checks its locations,
+  latest commit, and Viewed status. This applies to public and private PRs.
 
 ## The tour comment
 
@@ -142,8 +152,17 @@ and copy its `prepare-pr-for-review/` folder into your agent's skill directory, 
 `.claude/skills/` in a project. The skill needs Node.js 22 or later and an authenticated [GitHub CLI](https://cli.github.com/).
 Its scripts have no npm dependencies.
 
-Then ask your agent: “Use prepare-pr-for-review to write, check, and post a review tour for <PR URL>.” Ask it to
-“draft a tour” if you only want a local file. Viewed marks are optional; they belong to the account signed into `gh`.
+Run `gh auth status` to check your agent's GitHub sign-in, or `gh auth login` to sign in through your browser.
+If you use a personal access token (PAT), give it access to the target repository with **Pull requests: Read and
+write** so the agent can create or update tour comments. Configure it in the agent's environment. This is separate
+from the extension's **Read-only** token for reading PR comments and Viewed status; saving a token in the extension
+does not sign your agent in. See [GitHub CLI authentication](https://cli.github.com/manual/gh_auth_login) and
+[comment permissions](https://docs.github.com/en/rest/issues/comments#create-an-issue-comment).
+
+For the **Without a PAT** path, ask: “Use prepare-pr-for-review to write and validate a review tour for <PR URL>.
+Save it as a `.tour` file. Do not post a PR comment.” Load the saved file into the extension.
+For the **With a PAT** path, ask: “Use prepare-pr-for-review to write, check, and post a review tour for <PR URL>.”
+Viewed marks are optional; they belong to the account signed into `gh`.
 The skill is separate from the browser extension. Your agent and chosen model provider handle any code you send them.
 
 To check a tour yourself from this checkout:
@@ -173,9 +192,9 @@ and Chrome Web Store submission steps. `pnpm package` builds the extension and s
 
 ## Privacy and permissions
 
-PR Tour communicates directly with GitHub; it has no analytics or developer-operated backend. A token is optional
-for public repositories and required for private repositories and API-based Viewed progress. Step notes, including
-notes from a loaded tour, are sent to GitHub's Markdown API for formatting.
+PR Tour has no analytics or developer-operated backend. Manual loading works without a PAT on public and private
+PRs and makes no GitHub API requests. Reading tour comments and API-based Viewed progress requires a PAT. In that
+path, step notes are sent to GitHub's Markdown API for formatting; manually loaded notes stay as plain text.
 
 The extension uses `storage` to save your optional token, `scripting` to open a tour in a GitHub tab that was already
 open when the extension loaded, and access to `https://github.com/*` to display tours and navigate diffs.

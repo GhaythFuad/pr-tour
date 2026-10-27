@@ -34,7 +34,7 @@ import {
 } from './overlay'
 import { readToken } from './settings'
 import { readStorage, writeStorage } from './storage'
-import { locateStep, type LineTarget } from './patch'
+import { locateManualStep, locateStep, type LineTarget } from './patch'
 import { findTour, findTourInText, isTourOutdated, type Tour, type TourStep } from './tour'
 
 /** A tour step with where it opens in the diff and what the reviewer should know about it; `target` is its line when the diff shows it. */
@@ -48,7 +48,7 @@ type ViewedFiles = { paths: Set<string>; problem: string | null }
 /** An overlay ready to mount, with the tour session behind it when it shows a tour. */
 type LoadedOverlay = { overlay: MountedOverlay; session: Session | null }
 
-type RenderedNotes = { html: string } | { problem: string }
+type RenderedNotes = { html: string } | { text: string } | { problem: string }
 
 type Session = {
   pull: PullRef
@@ -81,7 +81,7 @@ const SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home
 const VIEWED_SETTLE_MS = 1000
 /** Sent by a freshly injected copy of this script, so a copy left over from before an extension reload steps aside. */
 const REPLACED_EVENT = 'pr-tour:replaced'
-const NO_TOUR_COMMENT = 'This pull request has no tour comment.'
+const NO_TOUR_COMMENT = 'No tour loaded yet.'
 
 let shownPull: string | null = null
 let mountedOverlay: MountedOverlay | null = null
@@ -202,11 +202,12 @@ function loadPanel(pull: PullRef, reason: string | null, restoreOnCancel: Loaded
       }
     },
     useComment: hasTourOverride ? () => void switchTour(pull, null) : null,
+    checkForTour: () => void showTourOrLoadPanel(pull),
     cancel: () => {
       if (restoreOnCancel) showOverlay(restoreOnCancel)
       else unmountOverlay()
     },
-  })
+  }, `https://github.com/${pull.owner}/${pull.repo}/pull/${pull.number}`)
   return { overlay: panel, session: null }
 }
 
@@ -236,12 +237,24 @@ function closedKey(pull: PullRef): string {
 async function loadOverlay(pull: PullRef): Promise<LoadedOverlay | null> {
   const token = await readToken()
   const tourOverride = readTourOverride(pull)
+  // Without a PAT the reviewer loads a tour manually, including on private PRs.
+  if (!token && tourOverride === null) return null
   const fix = tourOverride === null ? 'Edit the tour comment to fix it.' : 'Fix the tour, then load it again.'
   try {
     const found = tourOverride === null ? findTour(await listCommentBodies(pull, token)) : findTourInText(tourOverride)
     if (!found) return null
     if ('problem' in found) {
       return { overlay: buildProblemOverlay(`Can't load the tour. ${found.problem} ${fix}`, () => closeTour(pull)), session: null }
+    }
+    if (tourOverride !== null) {
+      const steps = await Promise.all(found.tour.steps.map(async (step): Promise<PlannedStep> => {
+        const { file, line, warning } = locateManualStep(step)
+        return { ...step, fileId: file === null ? null : await fileAnchorId(file.filename), target: line, warning }
+      }))
+      const viewed = { paths: new Set<string>(), problem: 'Manual mode does not read Viewed status from GitHub.' }
+      const session = startSession(pull, '', found.tour, steps, viewed, true)
+      for (const index of steps.keys()) void requestNotes(session, index)
+      return { overlay: session.overlay, session }
     }
     const { ref } = found.tour
     const [files, viewed, headCommit] = await Promise.all([
@@ -273,7 +286,7 @@ async function readViewedFiles(pull: PullRef, token: string, fallback: Set<strin
   if (!token) {
     return {
       paths: fallback,
-      problem: `Without a token PR Tour can't read which files you marked Viewed, so ${consequence} Add one in the PR Tour options.`,
+      problem: 'Manual mode does not read Viewed status from GitHub.',
     }
   }
   try {
@@ -409,6 +422,11 @@ function requestNotes(session: Session, index: number): Promise<void> {
   const existing = session.notesRequests.get(index)
   const step = session.steps[index]
   if (existing || !step) return existing ?? Promise.resolve()
+  if (!session.token) {
+    session.notes.set(index, { text: step.description })
+    if (session.index === index) showCurrentStep(session)
+    return Promise.resolve()
+  }
   const request = renderMarkdown(step.description, session.pull, session.token).then(
     (html): RenderedNotes => ({ html }),
     (error: unknown): RenderedNotes => ({ problem: error instanceof Error ? error.message : String(error) }),

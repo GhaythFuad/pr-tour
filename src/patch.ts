@@ -12,6 +12,20 @@ type NumberedLine = DiffLine & { number: number }
 /** Where a step lands in the pull request, and what the reviewer should know when it isn't where the tour meant. */
 export type StepLocation = { file: ChangedFile | null; line: LineTarget | null; warning: string | null }
 
+/** Manual tours use their saved locations without asking GitHub's API for repository data. */
+export function locateManualStep(step: TourStep): StepLocation {
+  if (step.file === undefined) return { file: null, line: null, warning: null }
+  const file = { filename: step.file }
+  if (step.line === undefined) {
+    return { file, line: null, warning: step.anchor === undefined ? null : 'This manual step has only a code anchor. Add a line number to open the line without a PAT; this step opens the file.' }
+  }
+  return {
+    file,
+    line: { side: step.side ?? 'new', line: step.line, code: step.anchor?.trim() ?? '', isCodeUnique: false },
+    warning: 'Manual mode uses the saved line number without checking the latest commit. Load an updated tour after new commits.',
+  }
+}
+
 /** Reads the lines of a unified diff hunk by hunk, skipping GitHub's "No newline at end of file" markers. */
 export function parsePatch(patch: string): DiffLine[] {
   const lines: DiffLine[] = []

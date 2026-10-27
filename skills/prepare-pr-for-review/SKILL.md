@@ -15,6 +15,19 @@ need no package install or project-specific checkout. Resolve `scripts/` and `TO
 wherever it was installed. Commands below use `SKILL_DIR` for that absolute folder and `PR_URL` for the full
 `https://github.com/OWNER/REPO/pull/NUMBER` URL. The extension supports github.com.
 
+Check `gh auth status` before posting. If not signed in, have the user run `gh auth login` in their terminal.
+For a personal access token (PAT), the token must have access to the target repository and **Pull requests: Read and
+write** to create or update tour comments. Configure it in the agent's environment, not in the tour or chat. Browser
+sign-in through `gh auth login` is also supported; a manually created PAT is not required for that flow.
+The extension offers two paths, separate from the agent's credentials:
+
+- **Without a PAT:** save a bare `.tour` JSON file for the user to paste or upload; do not post a comment unless
+  separately requested. The extension can play this file on public or private PRs the user can open in GitHub,
+  without API requests. Include exact line numbers: manual mode does not relocate code anchors, check the current
+  commit, format Markdown, or read Viewed status.
+- **With a PAT:** post the validated tour comment when requested. The extension reads it using a PAT with
+  **Pull requests: Read-only**, saved in PR Tour's Options. That PAT does not authenticate the coding agent.
+
 Read the target repository's contributor and agent instructions before writing. Respect the user's scope: a request
 to draft or check a tour does not authorize posting it or changing Viewed marks.
 
@@ -50,7 +63,8 @@ to draft or check a tour does not authorize posting it or changing Viewed marks.
    their work. Use `gh api -X PATCH "repos/OWNER/REPO/issues/comments/COMMENT_ID" -F body=@/absolute/path/to/tour-comment.md`
    for an existing comment, or `gh pr comment "$PR_URL" --body-file /absolute/path/to/tour-comment.md` for a new one.
 6. Check the posted comment by running the checker with just `"$PR_URL"`. Report the comment link, step count,
-   Risk steps, any files marked viewed, and any uncovered behavior. For a draft-only task, give the file instead.
+   Risk steps, any files marked viewed, and any uncovered behavior. For manual loading or a draft-only task, give a
+   bare `.tour` JSON file instead of posting it.
 
 Every push changes the commit the tour describes. Read the latest posted tour, update affected steps and new claims,
 set `ref` to the new head SHA, and validate again. GitHub also clears Viewed marks on files changed by the push.

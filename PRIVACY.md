@@ -7,10 +7,13 @@ The extension has no developer-operated server, analytics, advertising, or crash
 
 ## Data used to show a tour
 
-On github.com, the extension reads the current pull request's address, comments, changed files, diff contents,
-head commit, and your Viewed marks. It uses this data to find tours, show step notes, locate lines, and show progress.
-It sends requests to `https://api.github.com` for that pull request. Step descriptions are sent to GitHub's Markdown
-API for formatting, including descriptions from a file or pasted tour. GitHub may load images referenced in the
+When you paste or upload a tour, the extension uses the tour's saved file paths and line numbers to navigate the
+PR you have open in GitHub. This manual path makes no GitHub API requests and displays notes as plain text.
+
+When you connect a PAT to read tour comments, the extension reads the current pull request's address, comments,
+changed files, diff contents, head commit, and your Viewed marks. It uses this data to find tours, show step notes,
+locate lines, and show progress. It sends requests to `https://api.github.com` for that pull request. Step descriptions
+from the posted tour are sent to GitHub's Markdown API for formatting. GitHub may load images referenced in the
 rendered Markdown. GitHub handles API data under its own [privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
 
 If you add a GitHub token, PR Tour saves it in `chrome.storage.local` in your browser profile. It sends the token

@@ -49,6 +49,7 @@ export type LoadPanelActions = {
   load: (tourText: string, origin: string) => void
   /** Null unless a loaded tour replaces the tour comment. */
   useComment: (() => void) | null
+  checkForTour: () => void
   cancel: () => void
 }
 
@@ -232,13 +233,14 @@ export function buildLoadingOverlay(): MountedOverlay {
 }
 
 /** Takes a tour pasted as text or chosen as a file; `reason`, when given, says why it opened without being asked. */
-export function buildLoadPanel(reason: string | null, actions: LoadPanelActions): LoadPanel {
+export function buildLoadPanel(reason: string | null, actions: LoadPanelActions, pullUrl: string): LoadPanel {
   const host = document.createElement('pr-tour-overlay')
   const dock = readDock()
   host.dataset.dock = dock
   const card = element('section', 'card load')
-  card.setAttribute('aria-label', 'Load a review tour')
-  const hint = 'Paste a tour comment or a .tour file, or choose the file. PR Tour remembers it for this pull request, in every tab.'
+  const isEmpty = reason !== null
+  card.setAttribute('aria-label', isEmpty ? 'Generate a review tour' : 'Load a review tour')
+  const hint = 'Paste a tour comment or a .tour file, or choose the file. PR Tour remembers it for this pull request after reloads.'
   const tourField = element('textarea', 'tour-field')
   tourField.placeholder = `{ "$schema": "${CODETOUR_SCHEMA}", "title": "…", "steps": […] }`
   tourField.spellcheck = false
@@ -276,13 +278,124 @@ export function buildLoadPanel(reason: string | null, actions: LoadPanelActions)
     event.stopPropagation()
     actions.cancel()
   })
-  card.append(element('h2', 'step-title', 'Load a tour'), element('p', 'hint', reason ? `${reason} ${hint}` : hint), tourField, message, footer, fileInput)
+  if (isEmpty) {
+    card.classList.add('onboarding')
+    const header = element('div', 'load-heading')
+    const titles = element('div', '')
+    titles.append(element('span', 'eyebrow', 'PR Tour'), element('h2', 'step-title', 'Choose how to load your tour'))
+    const close = iconButton(CROSS, 'Close tour setup')
+    close.addEventListener('click', actions.cancel)
+    header.append(titles, close)
+
+    const choices = element('div', 'tour-choices')
+    choices.setAttribute('role', 'group')
+    choices.setAttribute('aria-label', 'Tour loading method')
+    const manualChoice = element('button', 'tour-choice')
+    const commentChoice = element('button', 'tour-choice')
+    for (const [choice, title, subtitle] of [
+      [manualChoice, 'Without a PAT', 'Paste or upload a tour'],
+      [commentChoice, 'With a PAT', 'Read tour comments from the PR'],
+    ] as const) {
+      choice.type = 'button'
+      choice.setAttribute('aria-label', title)
+      choice.append(element('strong', '', title), element('span', '', subtitle))
+      choices.append(choice)
+    }
+    const methodHint = element('p', 'hint method-hint')
+    const connection = element('div', 'token-setup')
+    connection.append(element('p', 'hint', '1. Create a personal access token (PAT) with access to this repository and Pull requests: Read-only.'))
+    const tokenLink = element('a', 'skill-link', 'Create a fine-grained PAT')
+    tokenLink.href = 'https://github.com/settings/personal-access-tokens/new'
+    tokenLink.target = '_blank'
+    tokenLink.rel = 'noreferrer'
+    connection.append(tokenLink, element('p', 'hint', '2. Right-click the PR Tour extension icon → Options. Save the PAT, then reload this PR.'))
+    connection.append(element('p', 'hint', 'This PAT lets the extension read comments and Viewed status. Your coding agent posts the tour using its own GitHub sign-in; see Skill instructions below.'))
+
+    const feedback = element('p', 'copy-feedback')
+    feedback.setAttribute('role', 'status')
+    const steps = element('ol', 'generate-steps')
+    const installCommand = 'npx skills add GhaythFuad/pr-tour --skill prepare-pr-for-review'
+    const manualPrompt = `Use the prepare-pr-for-review skill to write and validate a review tour for ${pullUrl}. Save it as a .tour file for me to load into PR Tour. Do not post a PR comment.`
+    const commentPrompt = `Use the prepare-pr-for-review skill to write, validate, and post a review tour for ${pullUrl}.`
+    let prompt = manualPrompt
+    let promptField: HTMLTextAreaElement
+    let promptHelp: HTMLElement
+    let promptCopy: HTMLButtonElement
+    for (const { title, help, value, label, fieldLabel, copied } of [
+      { title: 'Install the skill', help: 'Requires Node.js 22+ and GitHub CLI (gh). Run this once in your project’s terminal.', value: installCommand, label: 'install command', fieldLabel: 'Skill install command', copied: 'Install command copied.' },
+      { title: 'Ask your coding agent', help: 'Paste this prompt into your agent.', value: prompt, label: 'generation prompt', fieldLabel: 'Tour generation prompt', copied: 'Generation prompt copied.' },
+    ]) {
+      const step = element('li', 'generate-step')
+      const text = element('div', 'generate-content')
+      const field = element('textarea', 'copy-text', value)
+      field.readOnly = true
+      field.rows = label === 'generation prompt' ? 3 : 2
+      field.setAttribute('aria-label', fieldLabel)
+      const copy = textButton('button copy-button', '<span>Copy</span>', () => {
+        void navigator.clipboard.writeText(field.value).then(
+          () => {
+            feedback.textContent = copied
+            copy.textContent = 'Copied'
+          },
+          () => {
+            feedback.textContent = 'Could not copy. Select the text and copy it manually.'
+            field.focus({ preventScroll: true })
+            field.select()
+          },
+        )
+      })
+      copy.setAttribute('aria-label', `Copy ${label}`)
+      const copyRow = element('div', 'copy-row')
+      copyRow.append(field, copy)
+      const helpText = element('p', 'hint', help)
+      text.append(element('h3', 'generate-title', title), helpText, copyRow)
+      if (label === 'generation prompt') {
+        promptField = field
+        promptHelp = helpText
+        promptCopy = copy
+      }
+      step.append(text)
+      steps.append(step)
+    }
+    const next = element('div', 'generate-next')
+    next.append(
+      element('p', 'hint', 'Once your agent posts the tour comment, check for it here.'),
+      textButton('button primary', '<span>Check for tour</span>', actions.checkForTour),
+    )
+    const instructions = element('a', 'skill-link', 'Skill instructions')
+    instructions.href = 'https://github.com/GhaythFuad/pr-tour/tree/main/skills/prepare-pr-for-review'
+    instructions.target = '_blank'
+    instructions.rel = 'noreferrer'
+    const manual = element('div', 'manual-tour')
+    manual.append(element('h3', 'generate-title', 'Load your tour'), element('p', 'hint', 'Paste the tour below, or choose the .tour file your agent saved.'), tourField, message, footer, fileInput)
+    const setMethod = (withPat: boolean): void => {
+      manualChoice.setAttribute('aria-pressed', String(!withPat))
+      commentChoice.setAttribute('aria-pressed', String(withPat))
+      connection.hidden = !withPat
+      next.hidden = !withPat
+      manual.hidden = withPat
+      methodHint.textContent = withPat
+        ? 'Connect a PAT once. PR Tour then reads the tour comment from the PR, including private repositories.'
+        : 'No PAT required. Load a tour yourself on any PR you can open in GitHub, including private PRs. Notes appear as plain text; commit checks and Viewed status are unavailable.'
+      prompt = withPat ? commentPrompt : manualPrompt
+      promptField.value = prompt
+      promptHelp.textContent = withPat ? 'Ask your agent to post the tour as a PR comment.' : 'Ask your agent to save a file. It does not need to post a comment.'
+      promptCopy.textContent = 'Copy'
+      feedback.textContent = ''
+    }
+    manualChoice.addEventListener('click', () => setMethod(false))
+    commentChoice.addEventListener('click', () => setMethod(true))
+    setMethod(false)
+    card.append(header, element('p', 'hint', reason), choices, methodHint, connection, steps, feedback, manual, next, instructions)
+  } else {
+    card.append(element('h2', 'step-title', 'Load a tour'), element('p', 'hint', hint), tourField, message, footer, fileInput)
+  }
   host.attachShadow({ mode: 'open' }).append(element('style', '', OVERLAY_STYLES), card)
   return {
     host,
     mount: () => {
       document.body.append(host)
-      tourField.focus({ preventScroll: true })
+      if (!isEmpty) tourField.focus({ preventScroll: true })
       if (!prefersReducedMotion()) card.animate([tucked(dock), SETTLED], { duration: 220, easing: EASE_OUT })
     },
     remove: () => host.remove(),
