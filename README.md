@@ -64,6 +64,12 @@ Public repositories work without a token. For private ones, open the extension's
 **Options**) and paste a [fine-grained token](https://github.com/settings/personal-access-tokens/new) that can access
 those repositories with **Pull requests: Read-only**.
 
+## Try a guided review
+
+Open the [demo pull request](https://github.com/GhaythFuad/pr-tour/pull/1) with PR Tour installed. Its tour explains
+this documentation change one step at a time. Click **Next** to open the next changed line, or click a dot to jump.
+The same controls work on a code change in your own project.
+
 ## The tour comment
 
 Unless you loaded a tour yourself, the extension uses the newest comment on the pull request that contains a
