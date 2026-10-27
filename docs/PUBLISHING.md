@@ -22,8 +22,8 @@ The [developer dashboard](https://chrome.google.com/webstore/devconsole) require
 Upload `release/pr-tour-<version>-chrome.zip` as a new item, or a new package on the existing PR Tour item.
 Use [STORE-LISTING.md](STORE-LISTING.md) for listing text, permission explanations, and reviewer instructions.
 
-Supply `assets/icons/128.png` as the store icon, at least one actual 1280×800 or 640×400 product screenshot,
-and the 440×280 small promotional tile. Keep screenshots representative of the current build. The privacy policy URL is:
+Supply `assets/icons/128.png` as the store icon, the 1280×800 product screenshots in `assets/store/`,
+and `assets/store/promo-440x280.png` as the small promotional tile. Keep screenshots representative of the current build. The privacy policy URL is:
 
 https://github.com/GhaythFuad/pr-tour/blob/main/PRIVACY.md
 

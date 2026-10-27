@@ -73,7 +73,10 @@ covers local processing or direct GitHub transmission.
 
 ## Reviewer instructions
 
-No subscription or PR Tour account is needed. Install the extension, open a public GitHub PR, and click the toolbar
+No subscription or PR Tour account is needed. Open https://github.com/GhaythFuad/pr-tour/pull/1/changes after installing
+the extension. The posted tour loads automatically; click Next to highlight the next changed line.
+
+To use a different public GitHub PR, click the toolbar
 button. If there is no tour comment, use Load to paste a CodeTour JSON document or choose a .tour file. A public PR
 can be used without a token. The notes should appear and Previous/Next should navigate the tour. File steps open
 Files changed and scroll to a changed line. A token is optional for API-based Viewed progress. Mark viewed uses

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="280" viewBox="0 0 440 280">
+  <rect width="440" height="280" fill="#f5f3ff"/>
+  <rect x="28" y="28" width="52" height="52" rx="13" fill="#4f46e5"/>
+  <path d="M43 43v24m0-18h14a8 8 0 0 1 8 8v9m-6-5 6 6 6-6" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="43" cy="42" r="4.5" fill="white"/><circle cx="43" cy="68" r="4.5" fill="white"/>
+  <text x="96" y="65" fill="#1e1b4b" font-family="Arial, sans-serif" font-size="34" font-weight="700">PR Tour</text>
+  <text x="28" y="128" fill="#1e1b4b" font-family="Arial, sans-serif" font-size="30" font-weight="700">Follow the change.</text>
+  <text x="28" y="163" fill="#575474" font-family="Arial, sans-serif" font-size="17">Guided reviews on GitHub.</text>
+  <path d="M40 224h360" stroke="#c4b5fd" stroke-width="3"/>
+  <path d="M40 224h120" stroke="#4f46e5" stroke-width="3"/>
+  <circle cx="40" cy="224" r="7" fill="#4f46e5"/>
+  <circle cx="160" cy="224" r="11" fill="#4f46e5"/>
+  <circle cx="280" cy="224" r="7" fill="#c4b5fd"/>
+  <circle cx="400" cy="224" r="7" fill="#c4b5fd"/>
+</svg>

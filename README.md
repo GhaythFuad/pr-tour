@@ -2,9 +2,13 @@
 
 [![Check](https://github.com/GhaythFuad/pr-tour/actions/workflows/ci.yml/badge.svg)](https://github.com/GhaythFuad/pr-tour/actions/workflows/ci.yml) · [MIT license](LICENSE) · [Privacy](PRIVACY.md)
 
+[Try the public demo](https://github.com/GhaythFuad/pr-tour/pull/1) · [Download](https://github.com/GhaythFuad/pr-tour/releases/latest)
+
 A Chrome extension that walks you through a GitHub pull request in a planned order. The plan is a
 [CodeTour](https://github.com/microsoft/codetour) tour posted as a comment on the pull request, or loaded from a file or
 pasted text: a list of steps, each pointing at a file and line with notes on what to check there.
+
+![PR Tour highlights a changed line and explains what to review](assets/store/guided-review.png)
 
 On any page of that pull request, a card at the top or bottom of the page shows the current step: a line of dots for the whole
 tour, the step's file (or its title, for a step without one), its notes, and Previous and Next. The card keeps one
@@ -125,7 +129,7 @@ newcomer's reading order, point at exact diff lines, call out risks, and validat
 It includes a standalone checker and an optional helper to mark tests, images, lockfiles, symlinks, and unchanged
 renames as Viewed for the signed-in reviewer. It works with any repository on github.com.
 
-Install it with the [Skills CLI](https://github.com/vercel-labs/skills):
+Install it with the [Skills CLI](https://github.com/vercel-labs/skills) (Node.js 22.20 or later):
 
 ```sh
 npx skills add GhaythFuad/pr-tour --skill prepare-pr-for-review
