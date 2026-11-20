@@ -19,7 +19,7 @@ function gh(args) {
   return JSON.parse(execFileSync('gh', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }))
 }
 
-export async function prepareReview(prUrl, { dryRun = true, runGh = gh, log = console.log } = {}) {
+export async function prepareReview(prUrl, { dryRun = true, extraPaths = [], runGh = gh, log = console.log } = {}) {
   const url = new URL(prUrl)
   const match = url.pathname.match(/^\/([^/]+)\/([^/]+)\/pull\/([1-9]\d*)(?:\/|$)/)
   if (url.origin !== 'https://github.com' || !match) throw new Error('Use a full https://github.com/OWNER/REPO/pull/NUMBER URL.')
@@ -43,7 +43,15 @@ export async function prepareReview(prUrl, { dryRun = true, runGh = gh, log = co
     if (page.pageInfo.hasNextPage && !after) throw new Error('GitHub did not return the next page cursor.')
   } while (after !== null)
 
-  const supporting = (file) => SUPPORTING_PATH.test(file.path) || symlinks.has(file.path) ||
+  // Extra paths are repeats or the repository's own generated files; refuse any the pull request doesn't change.
+  const changed = new Set(files.map((file) => file.path))
+  const unknown = extraPaths.filter((path) => !changed.has(path))
+  if (unknown.length) {
+    throw new Error(`${repository}#${number} changes no file at these paths, so nothing was marked:\n` +
+      `${unknown.map((path) => `  ${path}`).join('\n')}\nPass each path as "Left for the reviewer" prints it.`)
+  }
+  const extra = new Set(extraPaths)
+  const supporting = (file) => SUPPORTING_PATH.test(file.path) || symlinks.has(file.path) || extra.has(file.path) ||
     (file.changeType === 'RENAMED' && file.additions === 0 && file.deletions === 0)
   const candidates = files.filter((file) => supporting(file) && file.viewerViewedState !== 'VIEWED')
   for (const file of candidates) {
@@ -62,13 +70,14 @@ export async function prepareReview(prUrl, { dryRun = true, runGh = gh, log = co
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const [prUrl, ...flags] = process.argv.slice(2)
-  if (!prUrl || flags.some((flag) => flag !== '--dry-run')) {
-    console.error('Usage: node mark-pr-files-viewed.mjs <PR URL> [--dry-run]')
+  const [prUrl, ...rest] = process.argv.slice(2)
+  const extraPaths = rest.filter((arg) => arg !== '--dry-run')
+  if (!prUrl || extraPaths.some((path) => path.startsWith('-'))) {
+    console.error('Usage: node mark-pr-files-viewed.mjs <PR URL> [--dry-run] [path ...]')
     process.exit(1)
   }
   try {
-    await prepareReview(prUrl, { dryRun: flags.includes('--dry-run') })
+    await prepareReview(prUrl, { dryRun: rest.includes('--dry-run'), extraPaths })
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error))
     process.exit(1)
