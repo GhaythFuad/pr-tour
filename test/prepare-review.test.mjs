@@ -31,6 +31,27 @@ describe('prepareReview', () => {
     const { candidates } = await prepareReview(prUrl, { dryRun: false, runGh, log: () => {} })
     expect(mutations(runGh).map(([args]) => args.find((arg) => arg.startsWith('path=')))).toEqual(candidates.map((path) => `path=${path}`))
   })
+  it('marks extra paths, such as repeats, and leaves them out of the review list', async () => {
+    const runGh = github()
+    const result = await prepareReview(prUrl, { dryRun: false, extraPaths: ['edited-move.ts', 'already.test.ts'], runGh, log: () => {} })
+    expect(result.candidates).toContain('edited-move.ts')
+    expect(result.candidates).not.toContain('already.test.ts')
+    expect(result.reviewable).toEqual(['src/auth.ts', 'README.md'])
+    expect(mutations(runGh).map(([args]) => args.find((arg) => arg.startsWith('path=')))).toContain('path=edited-move.ts')
+  })
+  it('previews extra paths without marking them by default', async () => {
+    const runGh = github()
+    const result = await prepareReview(prUrl, { extraPaths: ['edited-move.ts'], runGh, log: () => {} })
+    expect(result.candidates).toContain('edited-move.ts')
+    expect(result.reviewable).toEqual(['src/auth.ts', 'README.md'])
+    expect(mutations(runGh)).toHaveLength(0)
+  })
+  it('refuses an extra path the pull request does not change before marking anything', async () => {
+    const runGh = github()
+    await expect(prepareReview(prUrl, { dryRun: false, extraPaths: ['src/auth.ts', 'src/missing.ts'], runGh }))
+      .rejects.toThrow(/changes no file at these paths, so nothing was marked:\n {2}src\/missing\.ts\n/)
+    expect(mutations(runGh)).toHaveLength(0)
+  })
   it('refuses non-GitHub URLs before any request', async () => {
     const runGh = github()
     await expect(prepareReview('https://example.com/o/r/pull/1', { runGh })).rejects.toThrow('Use a full')

@@ -136,10 +136,16 @@ file instead, and the card says why.
 
 ## Create tours with a coding agent
 
-The [prepare-pr-for-review skill](skills/prepare-pr-for-review/SKILL.md) teaches an agent to explain a PR in a
+The [prepare-pr-for-review skill](skills/prepare-pr-for-review/SKILL.md) teaches an agent to tell a PR's story in a
 newcomer's reading order, point at exact diff lines, call out risks, and validate the result before posting it.
 It includes a standalone checker and an optional helper to mark tests, images, lockfiles, symlinks, and unchanged
 renames as Viewed for the signed-in reviewer. It works with any repository on github.com.
+
+The skill also looks for repeats: files that only make an edit the reviewer reads elsewhere, such as a rename at every
+call site or one import swapped everywhere. The agent, or a subagent when it has them, reads the diffs and keeps one
+file of each repeated edit for review. The helper can mark the rest as Viewed, and the tour's skim list names the kept
+file and how many files repeat its edit. The helper takes those paths after the PR URL, refuses any path the PR doesn't
+change, and accepts a repository's own generated files the same way.
 
 Install it with the [Skills CLI](https://github.com/vercel-labs/skills) (Node.js 22.20 or later):
 
