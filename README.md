@@ -80,6 +80,12 @@ Choose one of two ways to use the extension:
   and **Pull requests: Read-only**. Reload the PR. PR Tour reads the posted tour comment and checks its locations,
   latest commit, and Viewed status. This applies to public and private PRs.
 
+## Try a guided review
+
+Open the [demo pull request](https://github.com/GhaythFuad/pr-tour/pull/1) with PR Tour installed. Its tour explains
+this documentation change one step at a time. Click **Next** to open the next changed line, or click a dot to jump.
+The same controls work on a code change in your own project.
+
 ## The tour comment
 
 Unless you loaded a tour yourself, the extension uses the newest comment on the pull request that contains a
